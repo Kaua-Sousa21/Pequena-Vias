@@ -1,16 +1,14 @@
 <?php
 // config.php - Configurações do site
 $site_config = [
-    'title' => 'Pequenas Vias',
+    'title' => 'Santos Católicos',
     'description' => 'Portal dedicado às vidas dos santos católicos',
-    'logo' => 'Pequenas Vias',
+    'logo' => 'Santos Católicos',
     'menu_items' => [
         'Início' => 'index.php',
-        'Santos A-Z' => 'santos.php',
+        'Categorias' => 'categorias.php',
         'Calendário' => 'calendario.php',
-        'Padroeiros' => 'padroeiros.php',
-        'Orações' => 'oracoes.php',
-        'Contato' => 'contato.php'
+        'Santos' => 'santo.php'
     ],
     'carousel_slides' => [
         [
