@@ -1,7 +1,7 @@
 <?php
-require_once 'database.php';
-require_once 'Santo.php';
-require_once 'functions.php';
+require_once 'config/database.php';
+require_once 'classes/Santo.php';
+require_once 'utils/functions.php';
 
 $database = new Database();
 $db = $database->getConnection();

@@ -1,9 +1,6 @@
+
 <?php
-// categoria.php
-require_once 'config/database.php';
-require_once 'classes/Santo.php';
-require_once 'classes/Categoria.php';
-require_once 'utils/functions.php';
+require_once __DIR__ . '/config/init.php';
 
 $database = new Database();
 $db = $database->getConnection();

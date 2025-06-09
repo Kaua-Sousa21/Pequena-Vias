@@ -1,15 +1,17 @@
 <?php
-// config.php - Configurações do site
+require_once __DIR__ . '/config/init.php';
+
 $site_config = [
-    'title' => 'Santos Católicos',
+    'title' => 'Pequenas Vias',
     'description' => 'Portal dedicado às vidas dos santos católicos',
-    'logo' => 'Santos Católicos',
+    'logo' => 'Pequenas Vias',
     'menu_items' => [
-        'Início' => 'index.php',
-        'Categorias' => 'categorias.php',
-        'Calendário' => 'calendario.php',
-        'Santos' => 'santo.php'
-    ],
+    'Início' => 'index.php',
+    'Santos' => 'santos.php',  // Alterado de santo.php para santos.php
+    'Categorias' => 'categorias.php',
+    'Calendário' => 'calendario.php'
+],
+
     'carousel_slides' => [
         [
             'image' => 'https://www.cnbb.org.br/wp-content/uploads/2021/12/Santa-Luzia.jpg',

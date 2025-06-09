@@ -1,0 +1,12 @@
+RewriteEngine On
+Options -Indexes
+
+<FilesMatch "^.*\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+<Files ~ "^(index|santo|categoria|calendario)\.php$">
+    Order Allow,Deny
+    Allow from all
+</Files>
