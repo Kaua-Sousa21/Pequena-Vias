@@ -104,22 +104,63 @@ switch ($action) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .sidebar {
-            min-height: 100vh;
-            background: #2c3e50;
-            color: white;
-        }
-        .nav-link {
-            color: rgba(255,255,255,0.8);
-        }
-        .nav-link:hover {
-            color: white;
-            background: rgba(255,255,255,0.1);
-        }
-        .nav-link.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
+/* Garante que a sidebar e o conteúdo se alinhem corretamente */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Sidebar fixa e ocupando corretamente o espaço */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 240px;
+    padding-top: 1rem;
+    z-index: 1000;
+}
+
+/* Corrige o deslocamento do conteúdo principal */
+.col-md-9.col-lg-10.ms-sm-auto {
+    margin-left: 240px; /* igual à largura da sidebar */
+    width: calc(100% - 240px);
+}
+
+/* Tabela responsiva */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+.table th, .table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.table td:nth-child(2) {
+    max-width: 200px;
+}
+
+
     </style>
 </head>
 <body>
