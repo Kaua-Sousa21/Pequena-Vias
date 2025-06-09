@@ -35,8 +35,6 @@ $site_config = [
         ]
     ]
 ];
-
-// functions.php - Funções auxiliares
 function renderHeader($config) {
     ob_start();
     ?>
@@ -51,6 +49,13 @@ function renderHeader($config) {
                     <?php foreach($config['menu_items'] as $name => $link): ?>
                         <a href="<?php echo $link; ?>" class="menu-item"><?php echo $name; ?></a>
                     <?php endforeach; ?>
+
+                    <?php if (isset($_SESSION['usuario_id'])): ?>
+                        <a href="admin/index.php" class="menu-item">Painel Admin</a>
+                        <a href="admin/logout.php" class="menu-item">Sair</a>
+                    <?php else: ?>
+                        <a href="login.php" class="menu-item">Login</a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -58,6 +63,7 @@ function renderHeader($config) {
     <?php
     return ob_get_clean();
 }
+
 
 function renderCarousel($slides) {
     ob_start();
