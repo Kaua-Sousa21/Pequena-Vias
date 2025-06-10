@@ -502,21 +502,6 @@ switch ($action) {
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <h3><i class="fas fa-cross me-2"></i>Santos Admin</h3>
-                </div>
-                <nav class="mt-3">
-                    <a href="index.php" class="nav-link">
-                        <i class="fas fa-tachometer-alt"></i>Dashboard
-                    </a>
-                    <a href="index.php" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>Sair
-                    </a>
-                </nav>
-            </div>
-
             <!-- Conteúdo Principal -->
             <div class="main-content">
                 <div class="page-header">
