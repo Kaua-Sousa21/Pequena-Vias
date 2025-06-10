@@ -114,4 +114,40 @@ function gerarPaginacao($pagina_atual, $total_paginas, $url_base = '') {
     
     return $html;
 }
+    function processarUploadImagem($imagem) {
+    $targetDir = "../uploads/"; // Diretório para salvar as imagens
+    $targetFile = $targetDir . basename($imagem["name"]);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($targetFile,PATHINFO_EXTENSION));
+
+    // Verificar se é uma imagem
+    $check = getimagesize($imagem["tmp_name"]);
+    if($check === false) {
+        throw new Exception("O arquivo não é uma imagem.");
+    }
+
+    // Verificar se o arquivo já existe
+    if (file_exists($targetFile)) {
+        // Renomear o arquivo para evitar conflitos
+        $targetFile = $targetDir . uniqid() . "." . $imageFileType;
+    }
+
+    // Verificar tamanho do arquivo (5MB)
+    if ($imagem["size"] > 5000000) {
+        throw new Exception("Desculpe, o arquivo é muito grande.");
+    }
+
+    // Permitir certos formatos de arquivo
+    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+    && $imageFileType != "gif" ) {
+        throw new Exception("Desculpe, apenas arquivos JPG, JPEG, PNG e GIF são permitidos.");
+    }
+
+    // Tentar fazer o upload
+    if (move_uploaded_file($imagem["tmp_name"], $targetFile)) {
+        return str_replace("../", "", $targetFile); // Retorna o caminho da imagem sem ../
+    } else {
+        throw new Exception("Desculpe, houve um erro ao fazer o upload do arquivo.");
+    }
+}
 ?>

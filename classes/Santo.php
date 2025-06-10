@@ -3,29 +3,77 @@
 class Santo {
     private $conn;
     private $table_name = "santos";
-    public function contarSantosPorCategoria($categoria_slug) {
-    try {
-        $query = "SELECT COUNT(DISTINCT s.id) as total 
-                  FROM " . $this->table_name . " s
-                  JOIN santo_categoria sc ON s.id = sc.santo_id
-                  JOIN categorias c ON sc.categoria_id = c.id
-                  WHERE c.slug = :categoria_slug AND s.status = 'ativo'";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':categoria_slug', $categoria_slug, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        $row = $stmt->fetch();
-        return (int)$row['total'];
-    } catch(PDOException $e) {
-        error_log("Erro ao contar santos por categoria: " . $e->getMessage());
-        return 0;
-    }
-}
 
     public function __construct($db) {
         $this->conn = $db;
     }
+
+    public function contarSantosPorCategoria($categoria_slug) {
+        try {
+            $query = "SELECT COUNT(DISTINCT s.id) AS total 
+                      FROM " . $this->table_name . " s
+                      JOIN santo_categoria sc ON s.id = sc.santo_id
+                      JOIN categorias c ON sc.categoria_id = c.id
+                      WHERE c.slug = :categoria_slug AND s.status = 'ativo'";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':categoria_slug', $categoria_slug, PDO::PARAM_STR);
+            $stmt->execute();
+
+            $row = $stmt->fetch();
+            return (int)($row['total'] ?? 0); // Tratamento para caso não haja resultados
+        } catch (PDOException $e) {
+            error_log("Erro ao contar santos por categoria: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function criar($dados) {
+        try {
+            $sql = "INSERT INTO santos (nome, nome_completo, slug, resumo, biografia, data_nascimento, local_nascimento, data_morte, local_morte, data_canonizacao, papa_canonizacao, data_festa, padroeiro_de, simbolos, imagem, milagres, oracao, status) 
+                    VALUES (:nome, :nome_completo, :slug, :resumo, :biografia, :data_nascimento, :local_nascimento, :data_morte, :local_morte, :data_canonizacao, :papa_canonizacao, :data_festa, :padroeiro_de, :simbolos, :imagem, :milagres, :oracao, :status)";
+            $stmt = $this->conn->prepare($sql);
+
+            // Sanitize data and handle dates
+            $dados = $this->sanitizeData($dados);
+
+            if ($stmt->execute($dados)) {
+                $santoId = $this->conn->lastInsertId();
+                $this->atualizarCategoriasSanto($santoId, $dados['categorias'] ?? []); // Handle missing categories
+                return true;
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                throw new Exception("Erro ao criar santo: " . $errorInfo[2]);
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao criar santo: " . $e->getMessage());
+            throw $e; // Re-throw the exception for handling
+        }
+    }
+        private function sanitizeData($dados) {
+        $sanitizedData = [];
+        foreach ($dados as $key => $value) {
+            if (is_array($value)) { // Se for um array (como categorias), sanitize cada elemento
+                $sanitizedData[$key] = array_map('sanitizeInput', $value);
+            } else {
+                $sanitizedData[$key] = sanitizeInput($value);
+            }
+        }
+
+        // Tratar datas. Converter para o formato Y-m-d ou definir como NULL se estiverem vazias
+        foreach (['data_nascimento', 'data_morte', 'data_canonizacao', 'data_festa'] as $dataField) {
+            if (isset($sanitizedData[$dataField]) && !empty($sanitizedData[$dataField])) {
+                $sanitizedData[$dataField] = date('Y-m-d', strtotime($sanitizedData[$dataField]));
+            } else {
+                $sanitizedData[$dataField] = null;
+            }
+        }
+        return $sanitizedData;
+    }
+
+
+
+
 
     // Buscar santo por slug
     public function buscarPorSlug($slug) {
@@ -196,5 +244,6 @@ class Santo {
         }
     }
 }
+
 
 ?>
