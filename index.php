@@ -9,7 +9,6 @@ $site_config = [
     'Início' => 'index.php',
     'Santos' => 'santos.php',  // Alterado de santo.php para santos.php
     'Categorias' => 'categorias.php',
-    'Calendário' => 'calendario.php'
 ],
 
     'carousel_slides' => [

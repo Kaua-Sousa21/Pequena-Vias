@@ -1,5 +1,4 @@
 <?php
-// classes/Santo.php
 class Santo {
     private $conn;
     private $table_name = "santos";
@@ -10,73 +9,89 @@ class Santo {
 
     public function contarSantosPorCategoria($categoria_slug) {
         try {
-            $query = "SELECT COUNT(DISTINCT s.id) AS total 
+            $query = "SELECT COUNT(DISTINCT s.id) as total 
                       FROM " . $this->table_name . " s
                       JOIN santo_categoria sc ON s.id = sc.santo_id
                       JOIN categorias c ON sc.categoria_id = c.id
                       WHERE c.slug = :categoria_slug AND s.status = 'ativo'";
-
+            
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':categoria_slug', $categoria_slug, PDO::PARAM_STR);
             $stmt->execute();
-
+            
             $row = $stmt->fetch();
-            return (int)($row['total'] ?? 0); // Tratamento para caso não haja resultados
-        } catch (PDOException $e) {
+            return (int)$row['total'];
+        } catch(PDOException $e) {
             error_log("Erro ao contar santos por categoria: " . $e->getMessage());
             return 0;
         }
     }
+    public function listarSantos($limite = 20, $offset = 0, $busca = '') {
+    try {
+        $where = "WHERE 1=1"; // Começa com uma condição sempre verdadeira
+        $params = [];
 
-    public function criar($dados) {
-        try {
-            $sql = "INSERT INTO santos (nome, nome_completo, slug, resumo, biografia, data_nascimento, local_nascimento, data_morte, local_morte, data_canonizacao, papa_canonizacao, data_festa, padroeiro_de, simbolos, imagem, milagres, oracao, status) 
-                    VALUES (:nome, :nome_completo, :slug, :resumo, :biografia, :data_nascimento, :local_nascimento, :data_morte, :local_morte, :data_canonizacao, :papa_canonizacao, :data_festa, :padroeiro_de, :simbolos, :imagem, :milagres, :oracao, :status)";
-            $stmt = $this->conn->prepare($sql);
-
-            // Sanitize data and handle dates
-            $dados = $this->sanitizeData($dados);
-
-            if ($stmt->execute($dados)) {
-                $santoId = $this->conn->lastInsertId();
-                $this->atualizarCategoriasSanto($santoId, $dados['categorias'] ?? []); // Handle missing categories
-                return true;
-            } else {
-                $errorInfo = $stmt->errorInfo();
-                throw new Exception("Erro ao criar santo: " . $errorInfo[2]);
-            }
-        } catch (Exception $e) {
-            error_log("Erro ao criar santo: " . $e->getMessage());
-            throw $e; // Re-throw the exception for handling
+        if (!empty($busca)) {
+            $where .= " AND (s.nome LIKE :busca OR s.biografia LIKE :busca OR s.resumo LIKE :busca)";
+            $params[':busca'] = "%$busca%";
         }
+
+        $query = "SELECT s.*, GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') as categorias
+                  FROM " . $this->table_name . " s
+                  LEFT JOIN santo_categoria sc ON s.id = sc.santo_id
+                  LEFT JOIN categorias c ON sc.categoria_id = c.id
+                  $where
+                  GROUP BY s.id
+                  ORDER BY s.nome ASC
+                  LIMIT :limite OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind dos parâmetros de busca se existirem
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        }
+        
+        // Bind dos parâmetros de paginação
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    } catch(PDOException $e) {
+        error_log("Erro ao listar santos: " . $e->getMessage());
+        return [];
     }
-        private function sanitizeData($dados) {
-        $sanitizedData = [];
-        foreach ($dados as $key => $value) {
-            if (is_array($value)) { // Se for um array (como categorias), sanitize cada elemento
-                $sanitizedData[$key] = array_map('sanitizeInput', $value);
-            } else {
-                $sanitizedData[$key] = sanitizeInput($value);
-            }
+}
+
+public function contarSantos($busca = '') {
+    try {
+        $where = "WHERE 1=1";
+        $params = [];
+
+        if (!empty($busca)) {
+            $where .= " AND (nome LIKE :busca OR biografia LIKE :busca OR resumo LIKE :busca)";
+            $params[':busca'] = "%$busca%";
         }
 
-        // Tratar datas. Converter para o formato Y-m-d ou definir como NULL se estiverem vazias
-        foreach (['data_nascimento', 'data_morte', 'data_canonizacao', 'data_festa'] as $dataField) {
-            if (isset($sanitizedData[$dataField]) && !empty($sanitizedData[$dataField])) {
-                $sanitizedData[$dataField] = date('Y-m-d', strtotime($sanitizedData[$dataField]));
-            } else {
-                $sanitizedData[$dataField] = null;
-            }
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " $where";
+        $stmt = $this->conn->prepare($query);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_STR);
         }
-        return $sanitizedData;
+        
+        $stmt->execute();
+        $row = $stmt->fetch();
+        
+        return (int)$row['total'];
+    } catch(PDOException $e) {
+        error_log("Erro ao contar santos: " . $e->getMessage());
+        return 0;
     }
-
-
-
-
-
-    // Buscar santo por slug
-    public function buscarPorSlug($slug) {
+}
+        public function buscarPorSlug($slug) {
         try {
             $query = "SELECT s.*, GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') as categorias 
                       FROM " . $this->table_name . " s
@@ -84,166 +99,275 @@ class Santo {
                       LEFT JOIN categorias c ON sc.categoria_id = c.id
                       WHERE s.slug = :slug AND s.status = 'ativo'
                       GROUP BY s.id";
-            
+
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':slug', $slug, PDO::PARAM_STR);
+            $stmt->bindValue(':slug', $slug, PDO::PARAM_STR);
             $stmt->execute();
+
+            $santo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($santo) {
+                // Formatar datas
+                $santo['data_nascimento'] = $this->formatarData($santo['data_nascimento']);
+                $santo['data_morte'] = $this->formatarData($santo['data_morte']);
+                $santo['data_canonizacao'] = $this->formatarData($santo['data_canonizacao']);
+                $santo['data_festa'] = $this->formatarDataLiturgica($santo['data_festa']);
+            }
             
-            return $stmt->fetch();
-        } catch(PDOException $e) {
+            return $santo;
+        } catch (PDOException $e) {
             error_log("Erro ao buscar santo por slug: " . $e->getMessage());
             return false;
         }
     }
 
-    // Buscar santos com paginação
-    public function listarSantos($limite = 20, $offset = 0, $busca = '') {
-        try {
-            $where = "WHERE s.status = 'ativo'";
-            if (!empty($busca)) {
-                $where .= " AND (s.nome LIKE :busca OR s.biografia LIKE :busca OR s.resumo LIKE :busca)";
-            }
 
-            $query = "SELECT s.id, s.nome, s.slug, s.resumo, s.data_festa, s.imagem, s.status,
-                             GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') as categorias
-                      FROM " . $this->table_name . " s
-                      LEFT JOIN santo_categoria sc ON s.id = sc.santo_id
-                      LEFT JOIN categorias c ON sc.categoria_id = c.id
-                      $where
-                      GROUP BY s.id
-                      ORDER BY s.nome ASC
-                      LIMIT :limite OFFSET :offset";
-            
-            $stmt = $this->conn->prepare($query);
-            
-            if (!empty($busca)) {
-                $busca_param = "%$busca%";
-                $stmt->bindParam(':busca', $busca_param, PDO::PARAM_STR);
-            }
-            
-            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch(PDOException $e) {
-            error_log("Erro ao listar santos: " . $e->getMessage());
-            return [];
-        }
+    private function formatarData($data) {
+        return $data ? date('d/m/Y', strtotime($data)) : null;
     }
 
-    // Santos do dia
-    public function santosDodia($data = null) {
-        try {
-            if (!$data) {
-                $data = date('m-d');
-            } else {
-                $timestamp = strtotime($data);
-                if ($timestamp === false) {
-                    $data = date('m-d');
-                } else {
-                    $data = date('m-d', $timestamp);
-                }
-            }
+    private function formatarDataLiturgica($data) {
+        if (!$data) return null;
 
+        $meses = [
+            1 => 'janeiro', 2 => 'fevereiro', 3 => 'março', 4 => 'abril',
+            5 => 'maio', 6 => 'junho', 7 => 'julho', 8 => 'agosto',
+            9 => 'setembro', 10 => 'outubro', 11 => 'novembro', 12 => 'dezembro'
+        ];
+
+        $timestamp = strtotime($data);
+        if (!$timestamp) return null;
+
+        $dia = date('j', $timestamp);
+        $mes_num = (int)date('n', $timestamp);
+        $mes = $meses[$mes_num] ?? '';
+
+        return "$dia de $mes";
+    }
+
+public function buscarPorId($id) {
+    try {
+        $query = "SELECT s.*, GROUP_CONCAT(c.id) as categoria_ids 
+                  FROM " . $this->table_name . " s 
+                  LEFT JOIN santo_categoria sc ON s.id = sc.santo_id 
+                  LEFT JOIN categorias c ON sc.categoria_id = c.id 
+                  WHERE s.id = :id 
+                  GROUP BY s.id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        
+        return $stmt->fetch();
+    } catch(PDOException $e) {
+        error_log("Erro ao buscar santo por ID: " . $e->getMessage());
+        return false;
+    }
+}
+        public function buscarPorCategoria($categoria_slug, $limite = 20, $offset = 0) {
+        try {
             $query = "SELECT s.*, GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') as categorias
-                      FROM " . $this->table_name . " s
-                      LEFT JOIN santo_categoria sc ON s.id = sc.santo_id
-                      LEFT JOIN categorias c ON sc.categoria_id = c.id
-                      WHERE DATE_FORMAT(s.data_festa, '%m-%d') = :data 
-                      AND s.status = 'ativo'
-                      GROUP BY s.id
-                      ORDER BY s.nome";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':data', $data, PDO::PARAM_STR);
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch(PDOException $e) {
-            error_log("Erro ao buscar santos do dia: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    // Contar total de santos
-    public function contarSantos($busca = '') {
-        try {
-            $where = "WHERE status = 'ativo'";
-            if (!empty($busca)) {
-                $where .= " AND (nome LIKE :busca OR biografia LIKE :busca OR resumo LIKE :busca)";
-            }
-
-            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " $where";
-            $stmt = $this->conn->prepare($query);
-            
-            if (!empty($busca)) {
-                $busca_param = "%$busca%";
-                $stmt->bindParam(':busca', $busca_param, PDO::PARAM_STR);
-            }
-            
-            $stmt->execute();
-            $row = $stmt->fetch();
-            
-            return (int)$row['total'];
-        } catch(PDOException $e) {
-            error_log("Erro ao contar santos: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    // Buscar por categoria
-    public function buscarPorCategoria($categoria_slug, $limite = 20, $offset = 0) {
-        try {
-            $query = "SELECT s.*, c.nome as categoria_nome,
-                             GROUP_CONCAT(DISTINCT c2.nome ORDER BY c2.nome SEPARATOR ', ') as todas_categorias
-                      FROM " . $this->table_name . " s
+                      FROM santos s
                       JOIN santo_categoria sc ON s.id = sc.santo_id
                       JOIN categorias c ON sc.categoria_id = c.id
-                      LEFT JOIN santo_categoria sc2 ON s.id = sc2.santo_id
-                      LEFT JOIN categorias c2 ON sc2.categoria_id = c2.id
                       WHERE c.slug = :categoria_slug AND s.status = 'ativo'
                       GROUP BY s.id
                       ORDER BY s.nome ASC
                       LIMIT :limite OFFSET :offset";
-            
+
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':categoria_slug', $categoria_slug, PDO::PARAM_STR);
-            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $stmt->bindValue(':categoria_slug', $categoria_slug, PDO::PARAM_STR);
+            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch(PDOException $e) {
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
             error_log("Erro ao buscar santos por categoria: " . $e->getMessage());
-            return [];
+            return []; // Retorna um array vazio em caso de erro.
         }
     }
 
-    // Buscar santos aleatórios para destaque
-    public function santosDestaque($limite = 3) {
+    public function criar($dados) {
         try {
-            $query = "SELECT s.id, s.nome, s.slug, s.resumo, s.data_festa, s.imagem,
-                             GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') as categorias
-                      FROM " . $this->table_name . " s
-                      LEFT JOIN santo_categoria sc ON s.id = sc.santo_id
-                      LEFT JOIN categorias c ON sc.categoria_id = c.id
-                      WHERE s.status = 'ativo' AND s.imagem IS NOT NULL AND s.imagem != ''
-                      GROUP BY s.id
-                      ORDER BY RAND()
-                      LIMIT :limite";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch(PDOException $e) {
-            error_log("Erro ao buscar santos em destaque: " . $e->getMessage());
-            return [];
+            // Iniciar transação
+            $this->conn->beginTransaction();
+
+            // Preparar a query
+            $sql = "INSERT INTO " . $this->table_name . " 
+                    (nome, nome_completo, slug, resumo, biografia, 
+                    data_nascimento, local_nascimento, data_morte, local_morte, 
+                    data_canonizacao, papa_canonizacao, data_festa, 
+                    padroeiro_de, simbolos, imagem, milagres, oracao, status) 
+                    VALUES 
+                    (:nome, :nome_completo, :slug, :resumo, :biografia,
+                    :data_nascimento, :local_nascimento, :data_morte, :local_morte,
+                    :data_canonizacao, :papa_canonizacao, :data_festa,
+                    :padroeiro_de, :simbolos, :imagem, :milagres, :oracao, :status)";
+
+            $stmt = $this->conn->prepare($sql);
+
+            // Sanitizar e preparar dados
+            $dadosSanitizados = $this->sanitizeData($dados);
+            $dadosSanitizados['status'] = $dados['status'] ?? 'ativo';
+
+            // Executar a query
+            if ($stmt->execute($dadosSanitizados)) {
+                $santo_id = $this->conn->lastInsertId();
+
+                // Se houver categorias, inserir relações
+                if (!empty($dados['categorias'])) {
+                    $this->atualizarCategoriasSanto($santo_id, $dados['categorias']);
+                }
+
+                $this->conn->commit();
+                return true;
+            }
+
+            $this->conn->rollBack();
+            return false;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Erro ao criar santo: " . $e->getMessage());
+            throw new Exception("Erro ao criar santo: " . $e->getMessage());
         }
+    }
+
+    public function atualizar($id, $dados) {
+        try {
+            $this->conn->beginTransaction();
+
+            $campos = [];
+            $valores = [];
+
+            $campos_permitidos = [
+                'nome', 'nome_completo', 'slug', 'resumo', 'biografia',
+                'data_nascimento', 'local_nascimento', 'data_morte', 'local_morte',
+                'data_canonizacao', 'papa_canonizacao', 'data_festa',
+                'padroeiro_de', 'simbolos', 'imagem', 'milagres', 'oracao', 'status'
+            ];
+
+            foreach ($dados as $campo => $valor) {
+                if (in_array($campo, $campos_permitidos)) {
+                    $campos[] = "$campo = :$campo";
+                    $valores[$campo] = $valor;
+                }
+            }
+
+            if (empty($campos)) {
+                throw new Exception("Nenhum campo válido para atualização");
+            }
+
+            $valores['id'] = $id;
+
+            $query = "UPDATE " . $this->table_name . " 
+                     SET " . implode(', ', $campos) . " 
+                     WHERE id = :id";
+
+            $stmt = $this->conn->prepare($query);
+            
+            if ($stmt->execute($valores)) {
+                // Atualizar categorias se fornecidas
+                if (isset($dados['categorias'])) {
+                    $this->atualizarCategoriasSanto($id, $dados['categorias']);
+                }
+
+                $this->conn->commit();
+                return true;
+            }
+
+            $this->conn->rollBack();
+            return false;
+
+        } catch(PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Erro ao atualizar santo: " . $e->getMessage());
+            throw new Exception("Erro ao atualizar santo");
+        }
+    }
+
+    public function excluir($id) {
+        try {
+            // Primeiro, buscar o santo para obter a imagem
+            $query = "SELECT imagem FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $santo = $stmt->fetch();
+
+            // Iniciar transação
+            $this->conn->beginTransaction();
+
+            // Excluir registros da tabela santo_categoria
+            $query = "DELETE FROM santo_categoria WHERE santo_id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            // Excluir o santo
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            
+            if ($stmt->execute()) {
+                // Se houver imagem, excluir o arquivo
+                if ($santo && $santo['imagem']) {
+                    $caminho_imagem = ROOT_PATH . '/public/' . $santo['imagem'];
+                    if (file_exists($caminho_imagem)) {
+                        unlink($caminho_imagem);
+                    }
+                }
+
+                $this->conn->commit();
+                return true;
+            }
+
+            $this->conn->rollBack();
+            return false;
+        } catch(PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Erro ao excluir santo: " . $e->getMessage());
+            throw new Exception("Erro ao excluir santo");
+        }
+    }
+
+    private function atualizarCategoriasSanto($santo_id, $categorias) {
+        // Remover categorias antigas
+        $stmt = $this->conn->prepare("DELETE FROM santo_categoria WHERE santo_id = :santo_id");
+        $stmt->bindParam(':santo_id', $santo_id);
+        $stmt->execute();
+
+        // Inserir novas categorias
+        if (!empty($categorias)) {
+            $stmt = $this->conn->prepare("INSERT INTO santo_categoria (santo_id, categoria_id) VALUES (:santo_id, :categoria_id)");
+            foreach ($categorias as $categoria_id) {
+                $stmt->bindParam(':santo_id', $santo_id);
+                $stmt->bindParam(':categoria_id', $categoria_id);
+                $stmt->execute();
+            }
+        }
+    }
+
+    private function sanitizeData($dados) {
+        return [
+            'nome' => trim(strip_tags($dados['nome'])),
+            'nome_completo' => isset($dados['nome_completo']) ? trim(strip_tags($dados['nome_completo'])) : null,
+            'slug' => criarSlug($dados['nome']),
+            'resumo' => isset($dados['resumo']) ? trim(strip_tags($dados['resumo'])) : null,
+            'biografia' => isset($dados['biografia']) ? trim($dados['biografia']) : null,
+            'data_nascimento' => !empty($dados['data_nascimento']) ? $dados['data_nascimento'] : null,
+            'local_nascimento' => isset($dados['local_nascimento']) ? trim(strip_tags($dados['local_nascimento'])) : null,
+            'data_morte' => !empty($dados['data_morte']) ? $dados['data_morte'] : null,
+            'local_morte' => isset($dados['local_morte']) ? trim(strip_tags($dados['local_morte'])) : null,
+            'data_canonizacao' => !empty($dados['data_canonizacao']) ? $dados['data_canonizacao'] : null,
+            'papa_canonizacao' => isset($dados['papa_canonizacao']) ? trim(strip_tags($dados['papa_canonizacao'])) : null,
+            'data_festa' => !empty($dados['data_festa']) ? $dados['data_festa'] : null,
+            'padroeiro_de' => isset($dados['padroeiro_de']) ? trim(strip_tags($dados['padroeiro_de'])) : null,
+            'simbolos' => isset($dados['simbolos']) ? trim(strip_tags($dados['simbolos'])) : null,
+            'imagem' => isset($dados['imagem']) ? $dados['imagem'] : null,
+            'milagres' => isset($dados['milagres']) ? trim($dados['milagres']) : null,
+            'oracao' => isset($dados['oracao']) ? trim($dados['oracao']) : null
+        ];
     }
 }
-
-
-?>

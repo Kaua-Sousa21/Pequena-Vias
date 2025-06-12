@@ -4,7 +4,7 @@ session_start();
 
 // Se já estiver logado, redireciona para o painel
 if (isset($_SESSION['usuario_id'])) {
-    header('Location: admin/index.php');
+    header('Location: admin/layout.php');
     exit;
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':id', $usuario['id']);
                 $stmt->execute();
                 
-                header('Location: admin/index.php');
+                header('Location: admin/layout.php');
                 exit;
             }
         }

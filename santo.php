@@ -193,7 +193,7 @@ $descricao = resumirTexto($santo['resumo'], 160);
                 <!-- Imagem Principal -->
                 <?php if ($santo['imagem']): ?>
                 <div class="text-center mb-4">
-                    <img src="<?= htmlspecialchars($santo['imagem']) ?>" 
+                    <img src="public/<?= htmlspecialchars($santo['imagem']) ?>" 
                          alt="<?= htmlspecialchars($santo['nome']) ?>" 
                          class="img-fluid saint-image">
                 </div>

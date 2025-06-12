@@ -199,7 +199,7 @@ $descricao = "Conheça a vida e história dos santos da Igreja Católica";
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card saint-card">
                     <?php if (!empty($santo['imagem'])): ?>
-                        <img src="<?= htmlspecialchars($santo['imagem']) ?>" 
+                        <img src="public/<?= htmlspecialchars($santo['imagem']) ?>" 
                              class="saint-image" 
                              alt="<?= htmlspecialchars($santo['nome']) ?>">
                     <?php else: ?>

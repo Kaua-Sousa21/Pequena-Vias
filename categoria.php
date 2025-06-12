@@ -159,7 +159,7 @@ $descricao = $categoria['descricao'] ? resumirTexto($categoria['descricao'], 160
             <div class="col-lg-4 col-md-6">
                 <div class="card saint-card">
                     <?php if ($santo['imagem']): ?>
-                    <img src="<?= htmlspecialchars($santo['imagem']) ?>" 
+                    <img src="public/<?= htmlspecialchars($santo['imagem']) ?>" 
                          class="card-img-top saint-image" 
                          alt="<?= htmlspecialchars($santo['nome']) ?>">
                     <?php endif; ?>
