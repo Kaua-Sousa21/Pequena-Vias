@@ -6,34 +6,38 @@ $site_config = [
     'description' => 'Portal dedicado às vidas dos santos católicos',
     'logo' => 'Pequenas Vias',
     'menu_items' => [
-    'Início' => 'index.php',
-    'Santos' => 'santos.php',  // Alterado de santo.php para santos.php
-    'Categorias' => 'categorias.php',
-],
-
+        'Início' => 'index.php',
+        'Santos' => 'santos.php',
+        'Categorias' => 'categorias.php',
+    ],
     'carousel_slides' => [
         [
             'image' => 'https://www.cnbb.org.br/wp-content/uploads/2021/12/Santa-Luzia.jpg',
             'title' => 'Santos Mártires',
-            'description' => 'Conheça os primeiros testemunhas da fé cristã'
+            'description' => 'Conheça os primeiros testemunhas da fé cristã',
+            'icon' => '✝️'
         ],
         [
             'image' => 'https://img.cancaonova.com/cnimages/canais/uploads/sites/2/2022/08/Santo-Agostinho-artigoCNBB.jpg',
             'title' => 'Santos Fundadores',
-            'description' => 'Descubra os fundadores das grandes ordens religiosas'
+            'description' => 'Descubra os fundadores das grandes ordens religiosas',
+            'icon' => '⛪'
         ],
         [
             'image' => 'https://historiasdocatolicismo.com/assets/images/blog/img-carloacutis.jpg',
             'title' => 'Santos Modernos',
-            'description' => 'Inspire-se com os santos dos tempos atuais'
+            'description' => 'Inspire-se com os santos dos tempos atuais',
+            'icon' => '🌟'
         ],
         [
             'image' => 'https://www.otaboanense.com.br/wp-content/uploads/2021/10/santa_terezinha.jpg',
             'title' => 'Santas Mulheres',
-            'description' => 'Conheça as grandes santas da Igreja'
+            'description' => 'Conheça as grandes santas da Igreja',
+            'icon' => '🌹'
         ]
     ]
 ];
+
 function renderHeader($config) {
     ob_start();
     ?>
@@ -63,25 +67,54 @@ function renderHeader($config) {
     return ob_get_clean();
 }
 
-
 function renderCarousel($slides) {
     ob_start();
     ?>
-    <div class="carousel-container">
-        <div class="carousel" id="carousel">
-            <?php foreach($slides as $index => $slide): ?>
-            <div class="carousel-slide">
-                <img src="<?php echo $slide['image']; ?>" alt="<?php echo $slide['title']; ?>">
-                <div class="carousel-overlay">
-                    <h3><?php echo $slide['title']; ?></h3>
-                    <p><?php echo $slide['description']; ?></p>
-                </div>
-            </div>
-            <?php endforeach; ?>
+    <div class="carousel-wrapper">
+        <div class="carousel-header">
+            <h2>Explore Nossas Categorias</h2>
+            <p>Descubra as diferentes faces da santidade</p>
         </div>
-        <div class="carousel-indicators">
+        
+        <div class="carousel-container-3d">
+            <button class="carousel-nav prev" id="prevBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            
+            <div class="carousel-track" id="carouselTrack">
+                <?php foreach($slides as $index => $slide): ?>
+                <div class="carousel-card <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-image">
+                                <img src="<?php echo $slide['image']; ?>" alt="<?php echo $slide['title']; ?>">
+                                <div class="card-overlay">
+                                    <div class="card-icon"><?php echo $slide['icon']; ?></div>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <h3><?php echo $slide['title']; ?></h3>
+                                <p><?php echo $slide['description']; ?></p>
+                                <button class="card-button">Explorar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <button class="carousel-nav next" id="nextBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="carousel-dots">
             <?php foreach($slides as $index => $slide): ?>
-                <div class="indicator <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></div>
+                <button class="dot <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
         </div>
     </div>
@@ -132,13 +165,12 @@ function renderFooter() {
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> Portal dos Santos. Todos os direitos reservados.</p>
+            <p>© <?php echo date('Y'); ?> Portal dos Santos. Todos os direitos reservados.</p>
         </div>
     </footer>
     <?php
     return ob_get_clean();
 }
-
 
 // Conteúdo da página inicial
 $page_content = '
@@ -175,34 +207,19 @@ $page_content = '
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
 
         /* Header Styles */
         .header {
-            background: linear-gradient(90deg, #1976d2, #2196f3);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
             padding: 1rem 2rem;
-            box-shadow: 0 4px 20px rgba(25, 118, 210, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             position: relative;
-            overflow: visible;
             z-index: 1000;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .nav-container {
@@ -211,8 +228,6 @@ $page_content = '
             align-items: center;
             max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1001;
         }
 
         .logo {
@@ -224,8 +239,8 @@ $page_content = '
         }
 
         .menu-button {
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
             padding: 12px 24px;
             border-radius: 25px;
@@ -234,30 +249,10 @@ $page_content = '
             font-size: 16px;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-            z-index: 10;
-            display: inline-block;
-        }
-
-        .menu-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            transition: left 0.3s ease;
-        }
-
-        .menu-button:hover::before {
-            left: 0;
         }
 
         .menu-button:hover {
-            background: white;
-            color: #1976d2;
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
@@ -266,7 +261,8 @@ $page_content = '
             position: absolute;
             top: 60px;
             right: 0;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             min-width: 200px;
@@ -275,7 +271,7 @@ $page_content = '
             transform: translateY(-10px);
             transition: all 0.3s ease;
             z-index: 1002;
-            border: 2px solid #e3f2fd;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .menu-dropdown.active {
@@ -287,10 +283,10 @@ $page_content = '
         .menu-item {
             display: block;
             padding: 15px 20px;
-            color: #1976d2;
+            color: #333;
             text-decoration: none;
             transition: all 0.3s ease;
-            border-bottom: 1px solid #e3f2fd;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
         }
 
         .menu-item:last-child {
@@ -303,7 +299,7 @@ $page_content = '
         }
 
         .menu-item:hover {
-            background: #e3f2fd;
+            background: rgba(102, 126, 234, 0.1);
             padding-left: 30px;
         }
 
@@ -314,102 +310,246 @@ $page_content = '
             margin: 0 auto;
         }
 
-        .carousel-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(25, 118, 210, 0.3);
-            background: white;
-            z-index: 1;
+        /* Novo Carrossel 3D */
+        .carousel-wrapper {
+            margin: 2rem 0;
         }
 
-        .carousel {
-            display: flex;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .carousel-slide {
-            min-width: 100%;
-            position: relative;
-        }
-
-        .carousel-slide img {
-            width: 100%;
-            height: 400px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .carousel-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(25, 118, 210, 0.8));
+        .carousel-header {
+            text-align: center;
+            margin-bottom: 3rem;
             color: white;
-            padding: 2rem;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
         }
 
-        .carousel-slide:hover .carousel-overlay {
-            transform: translateY(0);
+        .carousel-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .carousel-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 20px;
-            background: white;
+        .carousel-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
         }
 
-        .indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #e3f2fd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .indicator.active {
-            background: #1976d2;
-            transform: scale(1.3);
-        }
-
-        .indicator:hover {
-            background: #2196f3;
-        }
-
-        /* Content Box */
-        .content-box {
-            background: white;
-            border-radius: 20px;
-            padding: 3rem;
-            margin: 4rem auto 0;
-            max-width: 800px;
-            box-shadow: 0 10px 30px rgba(25, 118, 210, 0.15);
-            border: 1px solid #e3f2fd;
+        .carousel-container-3d {
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+            perspective: 1000px;
+        }
+
+        .carousel-track {
+            display: flex;
+            gap: 2rem;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .carousel-card {
+            min-width: 320px;
+            height: 450px;
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .carousel-card:not(.active) {
+            transform: scale(0.8) rotateY(15deg);
+            opacity: 0.6;
+        }
+
+        .carousel-card.active {
+            transform: scale(1) rotateY(0deg);
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .carousel-card:hover .card-inner {
+            transform: rotateY(5deg) rotateX(5deg);
+        }
+
+        .card-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .card-image {
+            position: relative;
+            height: 60%;
             overflow: hidden;
         }
 
-        .content-box::before {
-            content: '';
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .carousel-card:hover .card-image img {
+            transform: scale(1.1);
+        }
+
+        .card-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #1976d2, #2196f3);
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .carousel-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .card-content {
+            padding: 2rem;
+            height: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-content h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .card-content p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .card-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .card-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .carousel-nav:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: -25px;
+        }
+
+        .carousel-nav.next {
+            right: -25px;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: white;
+            transform: scale(1.3);
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Content Box */
+        .content-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem auto 0;
+            max-width: 800px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .content-box h2 {
-            color: #1976d2;
+            color: #333;
             font-size: 2.2rem;
             margin-bottom: 1.5rem;
             text-align: center;
@@ -425,38 +565,28 @@ $page_content = '
         }
 
         .content-box .highlight {
-            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
+            background: linear-gradient(120deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
             padding: 1.5rem;
             border-radius: 15px;
-            border-left: 4px solid #2196f3;
+            border-left: 4px solid #667eea;
             margin: 2rem 0;
         }
 
         .content-box .highlight p {
             margin: 0;
             font-style: italic;
-            color: #1976d2;
+            color: #333;
             font-weight: 500;
         }
 
         /* Footer */
         .footer {
-            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
             color: white;
             padding: 3rem 2rem 2rem;
             margin-top: 4rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .footer-content {
@@ -465,8 +595,6 @@ $page_content = '
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
-            position: relative;
-            z-index: 2;
         }
 
         .footer-section h3 {
@@ -486,7 +614,6 @@ $page_content = '
 
         .footer-section a:hover {
             color: white;
-            text-decoration: underline;
         }
 
         .footer-section ul {
@@ -530,57 +657,27 @@ $page_content = '
             transform: translateY(-2px);
         }
 
-        /* Decorative Elements */
-        .decoration {
-            position: fixed;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #2196f3, #1976d2);
-            opacity: 0.1;
-            z-index: -1;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .decoration:nth-child(1) {
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .decoration:nth-child(2) {
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-
-        .decoration:nth-child(3) {
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
-            .nav-container {
-                padding: 0 1rem;
+            .carousel-container-3d {
+                padding: 1rem 0;
             }
-            
-            .logo {
-                font-size: 1.5rem;
+
+            .carousel-track {
+                gap: 1rem;
             }
-            
-            .main-content {
-                padding: 2rem 1rem;
+
+            .carousel-card {
+                min-width: 280px;
+                height: 400px;
             }
-            
-            .carousel-slide img {
-                height: 250px;
+
+            .carousel-nav {
+                display: none;
+            }
+
+            .carousel-header h2 {
+                font-size: 2rem;
             }
 
             .content-box {
@@ -588,26 +685,13 @@ $page_content = '
                 margin: 2rem 1rem 0;
             }
 
-            .content-box h2 {
-                font-size: 1.8rem;
-            }
-
-            .footer {
-                padding: 2rem 1rem 1rem;
-            }
-
-            .footer-content {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
+            .main-content {
+                padding: 2rem 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="decoration"></div>
-    <div class="decoration"></div>
-    <div class="decoration"></div>
-    
     <?php echo renderHeader($site_config); ?>
 
     <main class="main-content">
@@ -623,6 +707,7 @@ $page_content = '
         const menuDropdown = document.getElementById('menuDropdown');
 
         menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             menuDropdown.classList.toggle('active');
         });
@@ -635,44 +720,86 @@ $page_content = '
             e.stopPropagation();
         });
 
-        // Carousel functionality
-        const carousel = document.getElementById('carousel');
-        const indicators = document.querySelectorAll('.indicator');
-        let currentSlide = 0;
-        const totalSlides = <?php echo count($site_config['carousel_slides']); ?>;
-
-        function goToSlide(slideIndex) {
-            currentSlide = slideIndex;
-            const translateX = -slideIndex * 100;
-            carousel.style.transform = `translateX(${translateX}%)`;
+        // Novo Carrossel 3D
+        class Carousel3D {
+            constructor() {
+                this.track = document.getElementById('carouselTrack');
+                this.cards = document.querySelectorAll('.carousel-card');
+                this.dots = document.querySelectorAll('.dot');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                
+                this.currentIndex = 0;
+                this.totalCards = this.cards.length;
+                this.autoPlayInterval = null;
+                
+                this.init();
+            }
             
-            // Update indicators
-            indicators.forEach((indicator, index) => {
-                indicator.classList.toggle('active', index === slideIndex);
-            });
+            init() {
+                this.updateCarousel();
+                this.bindEvents();
+                this.startAutoPlay();
+            }
+            
+            bindEvents() {
+                this.prevBtn.addEventListener('click', () => this.prev());
+                this.nextBtn.addEventListener('click', () => this.next());
+                
+                this.dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => this.goTo(index));
+                });
+                
+                // Pause on hover
+                this.track.addEventListener('mouseenter', () => this.stopAutoPlay());
+                this.track.addEventListener('mouseleave', () => this.startAutoPlay());
+            }
+            
+            updateCarousel() {
+                this.cards.forEach((card, index) => {
+                    card.classList.toggle('active', index === this.currentIndex);
+                });
+                
+                this.dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentIndex);
+                });
+                
+                // Center the active card
+                const offset = this.currentIndex * -340; // card width + gap
+                this.track.style.transform = `translateX(${offset}px)`;
+            }
+            
+            next() {
+                this.currentIndex = (this.currentIndex + 1) % this.totalCards;
+                this.updateCarousel();
+            }
+            
+            prev() {
+                this.currentIndex = (this.currentIndex - 1 + this.totalCards) % this.totalCards;
+                this.updateCarousel();
+            }
+            
+            goTo(index) {
+                this.currentIndex = index;
+                this.updateCarousel();
+            }
+            
+            startAutoPlay() {
+                this.stopAutoPlay();
+                this.autoPlayInterval = setInterval(() => this.next(), 4000);
+            }
+            
+            stopAutoPlay() {
+                if (this.autoPlayInterval) {
+                    clearInterval(this.autoPlayInterval);
+                    this.autoPlayInterval = null;
+                }
+            }
         }
 
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % totalSlides;
-            goToSlide(currentSlide);
-        }
-
-        // Auto-advance carousel every 2 seconds
-        setInterval(nextSlide, 5000);
-
-        // Manual navigation
-        indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => {
-                goToSlide(index);
-            });
-        });
-
-        // Add loading animation for images
-        const images = document.querySelectorAll('.carousel-slide img');
-        images.forEach(img => {
-            img.addEventListener('load', function() {
-                this.style.opacity = '1';
-            });
+        // Initialize carousel when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            new Carousel3D();
         });
     </script>
 </body>
